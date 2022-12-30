@@ -3,9 +3,9 @@ const siteKey = 'siteKey';
 const secretKey = 'secretKey';
 
 const configKey = 'heizi_turnstile';
-function includeFile($file) {
-    include_once _include(APP_PATH."plugin/heizi_turnstile/$file");
-}
+//function includeFile($file) {
+//    include_once _include(APP_PATH."plugin/heizi_turnstile/$file");
+//}
 function getConfig() {
     $config = setting_get(configKey);
     return $config ? json_decode($config,true) : array(
@@ -31,6 +31,38 @@ function getTokenFromReq() {
     }
     return $data;
 }
+function bad_vld_req(): false {
+    message(1,'验证请求失效');
+    return false;
+}
+function req(string $url,array $data): false|array {
+
+    !defined("curlNotExist") AND define("curlNotExist",!function_exists('curl_exec'));
+    if (curlNotExist) {
+        message(-1, "curl not support");
+        return false;
+    }
+    $ch = curl_init();
+    curl_setopt_array($ch,[
+        CURLOPT_URL=>$url,
+        CURLOPT_HEADER=>false,
+        CURLOPT_POST=>1,
+        CURLOPT_HTTPHEADER=>['ContentType:application/x-www-form-urlencoded'],
+        CURLOPT_RETURNTRANSFER=>true,
+        CURLOPT_CONNECTTIMEOUT=>5*1000,
+        CURLOPT_POSTFIELDS=>$data,
+    ]);
+    $err = curl_error($ch);
+    $rsp = curl_exec($ch);
+
+    curl_close($ch);
+    if (empty($rsp) || $err!=0) return bad_vld_req();
+
+    $rsp = json_decode($rsp);
+    if (empty($rsp)) return  bad_vld_req();
+
+    return $rsp;
+}
 function validate_post_req():void {
 
     $url = 'https://challenges.cloudflare.com/turnstile/v0/siteverify';
@@ -38,26 +70,16 @@ function validate_post_req():void {
     $data = getTokenFromReq();
     if (empty($data)) return;
 
-    $data = array(
+    $data = [
         'secret'=> getConfig()[secretKey],
         'response' => $data,
         'remoteip' => $_SERVER['REMOTE_ADDR']
-    );
-    $data = array('http'=>array(
-        'method'=>'POST',
-        'content' => $data,
-        'header'=> "Content-type: application/x-www-form-urlencoded\r\n"
-            .      "Content-Length: " . strlen(json_encode($data)) . "\r\n",
-        'timeout' => 5*1000
+    ];
+    $data = req($url,$data);
 
-    ),'content' => $data);
-    $response = @file_get_contents($url, false, stream_context_create($data));
-    $response = json_decode($response);
-    if (empty($response)) {
-        error_message();
-        return;
-    }
-    if (!$response->success) {
+    if (empty($data)) bad_vld_req();
+
+    if (!$data['success']) {
         $directory = array(
             'missing-input-secret'=>'未传递秘密参数。',
             'invalid-input-secret'=>'秘密参数无效或不存在。',
@@ -67,7 +89,7 @@ function validate_post_req():void {
             'timeout-or-duplicate'=>'响应参数之前已经过验证。',
             'internal-error'=>'验证响应时发生内部错误。可以重试该请求。'
         );
-        message(1,$directory[$response['error-codes']]);
+        message(1,$directory[$data['error-codes']]);
     }
 
 }
