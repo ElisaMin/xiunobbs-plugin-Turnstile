@@ -1,0 +1,11 @@
+{
+  "name": "Cloudflare Turnstile 验证",
+  "brief": "让您的站点使用Cloudflare Turnstile进行验证",
+  "version": "1.0",
+  "bbs_version": "4.0",
+  "installed": 1,
+  "enable": 1,
+  "hooks_rank": [],
+  "overwrites_rank": [],
+  "dependencies": []
+}
