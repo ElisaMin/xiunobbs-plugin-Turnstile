@@ -1,0 +1,12 @@
+<?php include_once _include(APP_PATH."plugin/heizi_turnstile/utils/config.php");?>
+<?php $config = getConfig(); ?>
+<script>
+    $.ready(()=>{
+        let forms = $('form:not(:has(div.cf-turnstile),#search_form)')
+        if (forms.length<=0) return;
+        $('body').append(`<script src="https://challenges.cloudflare.com/turnstile/v0/api.js"></script>')
+        forms.forEach((self)=>{
+            $(self).append('<div class="cf-turnstile" data-sitekey="<?php echo $config[siteKey]?>"></div>')
+        })
+    })
+</script>
