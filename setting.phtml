@@ -9,19 +9,20 @@
         </div>
         <div class="card-body">
             <p class="card-text"><del>应该没啥逼用()</del></p>
+            <div class="alert alert-success msg" style="display: none"></div>
+            <form>
+                <div class="form-group">
+                    <label for="<?php echo siteKey ?>">Site Key : </label>
+                    <input placeholder="请输入您的Site Key" type="text" id="<?php echo siteKey ?>" name="<?php echo siteKey ?>" value="<?php echo $config[siteKey]  ?>" >
+                    <small class="form-text text-muted">https://developers.cloudflare.com/turnstile/get-started/#new-sites</small>
+                </div>
+                <div class="form-group">
+                    <label for="<?php echo secretKey ?>">Secret Key : </label>
+                    <input placeholder="请输入您的Secret Key" type="text" id="<?php echo secretKey ?>" name="<?php echo secretKey ?>" value="<?php echo $config[secretKey]  ?>" >
+                </div>
+                <button type="button" id="submit" class="btn btn-primary">确定</button>
+            </form>
         </div>
-        <form class="p-3 container">
-            <div class="form-group">
-                <label for="<?php echo siteKey ?>">Site Key : </label>
-                <input placeholder="请输入您的Site Key" type="text" id="<?php echo siteKey ?>" name="<?php echo siteKey ?>" value="<?php echo $config[siteKey]  ?>" >
-                <small class="form-text text-muted">https://developers.cloudflare.com/turnstile/get-started/#new-sites</small>
-            </div>
-            <div class="form-group">
-                <label for="<?php echo secretKey ?>">Secret Key : </label>
-                <input placeholder="请输入您的Secret Key" type="text" id="<?php echo secretKey ?>" name="<?php echo secretKey ?>" value="<?php echo $config[secretKey]  ?>" >
-            </div>
-            <button type="button" id="submit" class="btn btn-primary">确定</button>
-        </form>
     </div>
 </div>
 <script src="/view/js/jquery-3.1.0.js<?php echo $static_version;?>"></script>
