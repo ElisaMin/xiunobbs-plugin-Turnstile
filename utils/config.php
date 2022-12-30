@@ -79,7 +79,7 @@ function validate_post_req():void {
 
     if (empty($data)) bad_vld_req();
 
-    if (!$data['success']) {
+    if (!$data->success) {
         $directory = array(
             'missing-input-secret'=>'未传递秘密参数。',
             'invalid-input-secret'=>'秘密参数无效或不存在。',
