@@ -23,7 +23,7 @@ function error_message(): void {
  *
  * @return array|false|int|mixed|string
  */
-function getTokenFromReq(): mixed {
+function getTokenFromReq() {
     $data = param('cf-turnstile-response');
     if (empty($data)) {
         error_message();
