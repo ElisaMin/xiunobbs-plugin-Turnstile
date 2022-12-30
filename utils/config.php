@@ -31,11 +31,11 @@ function getTokenFromReq() {
     }
     return $data;
 }
-function bad_vld_req(): false {
+function bad_vld_req(): bool{
     message(1,'验证请求失效');
     return false;
 }
-function req(string $url,array $data): false|array {
+function req(string $url,array $data) {
 
     !defined("curlNotExist") AND define("curlNotExist",!function_exists('curl_exec'));
     if (curlNotExist) {
