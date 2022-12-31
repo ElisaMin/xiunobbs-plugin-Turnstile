@@ -1,11 +1,11 @@
 <?php include_once _include(APP_PATH."plugin/heizi_turnstile/utils/config.php");?>
 <?php $config = getConfig(); ?>
 <script>
-    let checkElms=(obj)=>{let elm = obj.length>0 ? obj : obj.prevObject;return elm.length>0 ? elm : null}
-    $(document).ready(()=>{
-        let forms = checkElms($('form:not(:has(div.cf-turnstile),#search_form)'))
-        if (!forms) return;
-
+    // let checkElms=(obj)=>{let elm = obj.length>0 ? obj : obj.prevObject;return elm.length>0 ? elm : null}
+    const updateForm = ()=>{
+        let forms = $(document.forms)
+            .filter(":not(:has(div.cf-turnstile),#search_form)")
+        if (forms.length<=0) return
         //append script
         let script = document.createElement("script")
         script.src = "https://challenges.cloudflare.com/turnstile/v0/api.js"
@@ -19,9 +19,20 @@
         div.setAttribute('data-sitekey',"<?php echo $config[siteKey]?>")
 
         for (let self of forms) {
-            let child = $(self).find("button,[type=submit],[type=button]")
+            let child;
+            child = $(self).find(".text-right")
+            if (!child)
+                child = $(self).find("button,[type=submit],[type=button]")
             if (child) $(child).before(div)
             else $(self).append(div)
         }
+    }
+    const showrepeat_old = showrepeat
+    const showrepeat = (pid)=>{
+        showrepeat_old(pid)
+        updateForm()
+    }
+    $(document).ready(()=>{
+        updateForm()
     })
 </script>
