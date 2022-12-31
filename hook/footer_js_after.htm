@@ -6,7 +6,7 @@
     let btnTexts = []
     function turnstileCallback() {
         for (let btnText of btnTexts) {
-            let btn = btnText[0]
+            let btn = $(btnText[0])
             btn.text(btnText[1])
             if (!btn.skipDis && btn.disabled)
                 btn.prop('disabled',false)
@@ -28,7 +28,7 @@
         let div = document.createElement("div")
         div.className+="cf-turnstile"
         div.setAttribute('data-sitekey',"<?php echo $config[siteKey]?>")
-        div.setAttribute('data-callback','turnstileCallback()')
+        div.setAttribute('data-callback','turnstileCallback')
 
         for (let form of forms) {
             let self = $(form)
