@@ -16,7 +16,7 @@
 
         let div = document.createElement("div")
         div.className+="cf-turnstile"
-        div.attributes["data-sitekey"]="<?php echo $config[siteKey]?>"
+        div.setAttribute('data-sitekey',"<?php echo $config[siteKey]?>")
 
         for (let self of forms) {
             let child = $(self).find("button,[type=submit],[type=button]")
