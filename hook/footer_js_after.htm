@@ -2,6 +2,17 @@
 <?php $config = getConfig(); ?>
 <script>
     // let checkElms=(obj)=>{let elm = obj.length>0 ? obj : obj.prevObject;return elm.length>0 ? elm : null}
+    function empty(elms) {return elms.length<=0}
+    let btnTexts = []
+    function turnstileCallback() {
+        for (let btnText of btnTexts) {
+            let btn = btnText[0]
+            btn.text(btnText[1])
+            if (!btn.skipDis && btn.disabled)
+                btn.prop('disabled',false)
+        }
+        btnTexts=[]
+    }
     const updateForm = ()=>{
         let forms = $(document.forms)
             .filter(":not(:has(div.cf-turnstile),#search_form)")
@@ -11,28 +22,34 @@
         script.src = "https://challenges.cloudflare.com/turnstile/v0/api.js"
         script.async = true
         script.defer = true
-
-        $('body').append(script)
+        let body = $(document.body)
+        if (empty(body.find(script))) $('body').append(script)
 
         let div = document.createElement("div")
         div.className+="cf-turnstile"
         div.setAttribute('data-sitekey',"<?php echo $config[siteKey]?>")
+        div.setAttribute('data-callback','turnstileCallback()')
 
-        for (let self of forms) {
-            let child;
-            child = $(self).find(".text-right")
-            if (!child)
-                child = $(self).find("button,[type=submit],[type=button]")
-            if (child) $(child).before(div)
-            else $(self).append(div)
+        for (let form of forms) {
+            let self = $(form)
+            let btns = self.find("button,[type=submit],[type=button]")
+            let child = self.find(".text-right")
+            if (empty(child))
+                child = self.find("#advanced_reply")
+            if (empty(child))
+                child = btns
+            if (empty(child)) self.append(div)
+            else child.before(div)
+            for (let b of btns) {
+                let btn = $(b)
+                btnTexts+=[btn,btn.text()]
+                if (btn.disabled) btn.prop('skipDis',true)
+                btn.prop("disabled",true)
+                btn.text("正在等待Turnstile...")
+                btn.show()
+            }
         }
     }
-    var showrepeat_old = showrepeat
-    var showrepeat = (pid)=>{
-        showrepeat_old(pid)
-        updateForm()
-    }
-
     $(document).ready(()=>{
         updateForm()
     })
