@@ -1,13 +1,27 @@
 <?php include_once _include(APP_PATH."plugin/heizi_turnstile/utils/config.php");?>
 <?php $config = getConfig(); ?>
 <script>
+    let checkElms=(obj)=>{let elm = obj.length>0 ? obj : obj.prevObject;return elm.length>0 ? elm : null}
     $(document).ready(()=>{
-        let forms = $('form:not(:has(div.cf-turnstile),#search_form)')
-        if (forms.length<=0) return;
-        let script = '<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer/>';
+        let forms = checkElms($('form:not(:has(div.cf-turnstile),#search_form)'))
+        if (!forms) return;
+
+        //append script
+        let script = document.createElement("script")
+        script.src = "https://challenges.cloudflare.com/turnstile/v0/api.js"
+        script.async = true
+        script.defer = true
+
         $('body').append(script)
+
+        let div = document.createElement("div")
+        div.className+="cf-turnstile"
+        div.attributes["data-sitekey"]="<?php echo $config[siteKey]?>"
+
         for (let self of forms) {
-            $(self).append('<div class="cf-turnstile" data-sitekey="<?php echo $config[siteKey]?>"></div>')
+            let child = checkElms($(self).children("button,[type=submit,button]"))
+            if (!child) $(child).before(div)
+            else $(self).append(div)
         }
     })
 </script>
