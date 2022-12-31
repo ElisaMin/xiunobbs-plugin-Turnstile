@@ -19,8 +19,8 @@
         div.attributes["data-sitekey"]="<?php echo $config[siteKey]?>"
 
         for (let self of forms) {
-            let child = checkElms($(self).children("button,[type=submit,button]"))
-            if (!child) $(child).before(div)
+            let child = $(self).find("button,[type=submit],[type=button]")
+            if (child) $(child).before(div)
             else $(self).append(div)
         }
     })
