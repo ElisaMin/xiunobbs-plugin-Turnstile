@@ -90,7 +90,10 @@ function validate_post_req():void {
             'timeout-or-duplicate'=>'响应参数之前已经过验证。',
             'internal-error'=>'验证响应时发生内部错误。可以重试该请求。'
         );
-        message(1,$directory[$data['error-codes']]);
+        $msg = $data['error-codes'];
+        $msg = empty($msg) ? "未知错误: ".implode($data) : $directory->$msg;
+        empty($msg) and $msg = "未知错误: ".$msg;
+        message(1,$msg);
     }
 
 }
