@@ -1,6 +1,7 @@
 <?php
 const siteKey = 'siteKey';
 const secretKey = 'secretKey';
+const tokenParamName = "token";
 
 const configKey = 'heizi_turnstile';
 //function includeFile($file) {
@@ -24,7 +25,7 @@ function error_message(): void {
  * @return array|false|int|mixed|string
  */
 function getTokenFromReq() {
-    $data = param('cf-turnstile-response');
+    $data = param(tokenParamName);
     if (empty($data)) {
         error_message();
         return false;
