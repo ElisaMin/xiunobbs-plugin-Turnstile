@@ -32,36 +32,34 @@ function getTokenFromReq() {
     }
     return $data;
 }
-function bad_vld_req(): bool{
-    message(1,'验证请求失效');
+function bad_vld_req($err,$code=-1): bool{
+    empty($err) and $err = ": ".$err;
+    message($code,'验证请求失效'.$err);
     return false;
 }
-function req(string $url,array $data) {
-
-    !defined("curlNotExist") AND define("curlNotExist",!function_exists('curl_exec'));
-    if (curlNotExist) {
-        message(-1, "curl not support");
-        return false;
-    }
-    $ch = curl_init();
-    curl_setopt_array($ch,[
-        CURLOPT_URL=>$url,
-        CURLOPT_HEADER=>false,
-        CURLOPT_POST=>1,
-        CURLOPT_HTTPHEADER=>['ContentType:application/x-www-form-urlencoded'],
-        CURLOPT_RETURNTRANSFER=>true,
-        CURLOPT_CONNECTTIMEOUT=>5*1000,
-        CURLOPT_POSTFIELDS=>$data,
+function req_not_curl($url,$data) {
+    $data = http_build_query($data);
+    $data = stream_context_create([
+        "ssl" => [
+            "verify_peer"=>false,
+            "verify_peer_name"=>false,
+        ],
+        'http' => [
+            'method' => 'POST',
+            'header'=> "Content-type: application/x-www-form-urlencoded\r\n" . "Content-Length: " . strlen($data) . "\r\n",
+            'content' => $data,
+            'timeout' => 460
+        ],
     ]);
-    $err = curl_error($ch);
-    $rsp = curl_exec($ch);
+    return @file_get_contents($url, false, $data);
+}
 
-    curl_close($ch);
-    if (empty($rsp) || $err!=0) return bad_vld_req();
-
+function req(string $url,array $data) {
+    !defined("curlNotExist") AND define("curlNotExist",!function_exists('curl_exec'));
+    $rsp = curlNotExist ? req_not_curl($url,$data) : https_post($url,$data,460,) ;
+    if (empty($rsp)) return bad_vld_req(null);
     $rsp = json_decode($rsp);
-    if (empty($rsp)) return  bad_vld_req();
-
+    if (empty($rsp)) return bad_vld_req("bad rsp $rsp",-2);
     return $rsp;
 }
 function validate_post_req():void {
@@ -78,7 +76,7 @@ function validate_post_req():void {
     ];
     $data = req($url,$data);
 
-    if (empty($data)) bad_vld_req();
+    if (empty($data)) bad_vld_req("empty rsp $data",-2);
 
     if (!$data->success) {
         $directory = array(
