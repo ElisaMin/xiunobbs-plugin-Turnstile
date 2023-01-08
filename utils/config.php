@@ -20,7 +20,7 @@ function tns_get_config() {
  * TURE means success, FALSE means param is empty
  */
 function tns_validate_post_req($data = null): ?bool {
-    $data = empty($data) ? tns_token_form_param() :$data ;
+    $data = ($data == null) ? tns_token_form_param() :$data ;
     if (empty($data)) return false;
     $url = 'https://challenges.cloudflare.com/turnstile/v0/siteverify';
     $data = [
