@@ -1,5 +1,5 @@
 <?php
-// config
+//=========config========//
 const siteKey_turnstile = 'siteKey';
 const secretKey_turnstile = 'secretKey';
 const tokenParamName_turnstile = "token";
@@ -11,23 +11,29 @@ function tns_get_config() {
         secretKey_turnstile=>''
     );
 }
-//req
-function tns_validate_post_req():void {
+//==========req==========//
+/**
+ * simple cloudflare-turnstile serverside validation in php
+ *
+ * @see https://developers.cloudflare.com/turnstile/get-started/server-side-validation
+ * @return bool|null returns null if its on error and so you have to retry again
+ * TURE means success, FALSE means param is empty
+ */
+function tns_validate_post_req($data = null): ?bool {
+    $data = empty($data) ? tns_token_form_param() :$data ;
+    if (empty($data)) return false;
     $url = 'https://challenges.cloudflare.com/turnstile/v0/siteverify';
-
-    $data = tns_token_form_param();
-    if (empty($data)) return;
-
     $data = [
         'secret'=> tns_get_config()[secretKey_turnstile],
         'response' => $data,
         'remoteip' => $_SERVER['REMOTE_ADDR']
     ];
     $data = tns_req($url,$data);
-
-    if (empty($data)) tns_error_bad_vld_req("empty rsp $data",-2);
-
-    if (!$data->success) {
+    if (empty($data)) {
+        tns_error_bad_vld_req("empty rsp $data", -2);
+        return null;
+    }
+    if (!empty($data['success'])) {
         $directory = array(
             'missing-input-secret'=>'未传递秘密参数。',
             'invalid-input-secret'=>'秘密参数无效或不存在。',
@@ -41,8 +47,9 @@ function tns_validate_post_req():void {
         $msg = empty($msg) ? "未知错误: ".implode($data) : $directory->$msg;
         empty($msg) and $msg = "未知错误: ".$msg;
         message(1,$msg);
+        return null;
     }
-
+    return true;
 }
 /**
  * 获取用于服务器验证的token
@@ -57,25 +64,21 @@ function tns_token_form_param() {
     }
     return $data;
 }
-
-// err
-
+//==========err==========//
 function tns_error_message_turnstile(): void {
     message(1,'请通过Turnstile');
 }
-
 function tns_error_bad_vld_req($err, $code=-1): bool{
     empty($err) and $err = ": ".$err;
     message($code,'验证请求失效'.$err);
     return false;
 }
-
-// get data and return array
+//======return array=====//
 function tns_req(string $url, array $data) {
     !defined("curlNotExist") AND define("curlNotExist",!function_exists('curl_exec'));
     $rsp = curlNotExist ? tns_req_not_curl($url,$data) : https_post($url,$data,460,) ;
     if (empty($rsp)) return tns_error_bad_vld_req(null);
-    $rsp = json_decode($rsp);
+    $rsp = json_decode($rsp,true);
     if (empty($rsp)) return tns_error_bad_vld_req("bad rsp $rsp",-2);
     return $rsp;
 }
