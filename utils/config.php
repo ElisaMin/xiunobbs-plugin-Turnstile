@@ -1,12 +1,9 @@
 <?php
+// config
 const siteKey_turnstile = 'siteKey';
 const secretKey_turnstile = 'secretKey';
 const tokenParamName_turnstile = "token";
-
 const configKey_turnstile = 'heizi_turnstile';
-//function includeFile($file) {
-//    include_once _include(APP_PATH."plugin/heizi_turnstile/$file");
-//}
 function tns_get_config() {
     $config = setting_get(configKey_turnstile);
     return $config ? json_decode($config,true) : array(
@@ -14,56 +11,8 @@ function tns_get_config() {
         secretKey_turnstile=>''
     );
 }
-
-function tns_error_message_turnstile(): void {
-    message(1,'请通过Turnstile');
-}
-
-/**
- * 获取用于服务器验证的token
- *
- * @return array|false|int|mixed|string
- */
-function tns_token_form_param() {
-    $data = param(tokenParamName_turnstile);
-    if (empty($data)) {
-        tns_error_message_turnstile();
-        return false;
-    }
-    return $data;
-}
-function tns_error_bad_vld_req($err, $code=-1): bool{
-    empty($err) and $err = ": ".$err;
-    message($code,'验证请求失效'.$err);
-    return false;
-}
-function tns_req_not_curl($url, $data) {
-    $data = http_build_query($data);
-    $data = stream_context_create([
-        "ssl" => [
-            "verify_peer"=>false,
-            "verify_peer_name"=>false,
-        ],
-        'http' => [
-            'method' => 'POST',
-            'header'=> "Content-type: application/x-www-form-urlencoded\r\n" . "Content-Length: " . strlen($data) . "\r\n",
-            'content' => $data,
-            'timeout' => 460
-        ],
-    ]);
-    return @file_get_contents($url, false, $data);
-}
-
-function tns_req(string $url, array $data) {
-    !defined("curlNotExist") AND define("curlNotExist",!function_exists('curl_exec'));
-    $rsp = curlNotExist ? tns_req_not_curl($url,$data) : https_post($url,$data,460,) ;
-    if (empty($rsp)) return tns_error_bad_vld_req(null);
-    $rsp = json_decode($rsp);
-    if (empty($rsp)) return tns_error_bad_vld_req("bad rsp $rsp",-2);
-    return $rsp;
-}
+//req
 function tns_validate_post_req():void {
-
     $url = 'https://challenges.cloudflare.com/turnstile/v0/siteverify';
 
     $data = tns_token_form_param();
@@ -94,4 +43,55 @@ function tns_validate_post_req():void {
         message(1,$msg);
     }
 
+}
+/**
+ * 获取用于服务器验证的token
+ *
+ * @return array|false|int|mixed|string
+ */
+function tns_token_form_param() {
+    $data = param(tokenParamName_turnstile);
+    if (empty($data)) {
+        tns_error_message_turnstile();
+        return false;
+    }
+    return $data;
+}
+
+// err
+
+function tns_error_message_turnstile(): void {
+    message(1,'请通过Turnstile');
+}
+
+function tns_error_bad_vld_req($err, $code=-1): bool{
+    empty($err) and $err = ": ".$err;
+    message($code,'验证请求失效'.$err);
+    return false;
+}
+
+// get data and return array
+function tns_req(string $url, array $data) {
+    !defined("curlNotExist") AND define("curlNotExist",!function_exists('curl_exec'));
+    $rsp = curlNotExist ? tns_req_not_curl($url,$data) : https_post($url,$data,460,) ;
+    if (empty($rsp)) return tns_error_bad_vld_req(null);
+    $rsp = json_decode($rsp);
+    if (empty($rsp)) return tns_error_bad_vld_req("bad rsp $rsp",-2);
+    return $rsp;
+}
+function tns_req_not_curl($url, $data) {
+    $data = http_build_query($data);
+    $data = stream_context_create([
+        "ssl" => [
+            "verify_peer"=>false,
+            "verify_peer_name"=>false,
+        ],
+        'http' => [
+            'method' => 'POST',
+            'header'=> "Content-type: application/x-www-form-urlencoded\r\n" . "Content-Length: " . strlen($data) . "\r\n",
+            'content' => $data,
+            'timeout' => 460
+        ],
+    ]);
+    return @file_get_contents($url, false, $data);
 }
