@@ -1,5 +1,5 @@
 <?php include_once _include(APP_PATH."plugin/heizi_turnstile/utils/config.php");?>
-<?php $config = getConfig(); ?>
+<?php $config = tns_get_config(); ?>
 <script>
     // let checkElms=(obj)=>{let elm = obj.length>0 ? obj : obj.prevObject;return elm.length>0 ? elm : null}
     function empty(elms) {return elms.length<=0}
@@ -30,8 +30,8 @@
         let attr =(k,v)=>div.setAttribute("data-"+k,v)
         div.className+="cf-turnstile"
         div.style.width="100%"
-        attr("response-field-name","<?php echo tokenParamName ?>")
-        attr('sitekey',"<?php echo $config[siteKey]?>")
+        attr("response-field-name","<?php echo tokenParamName_turnstile ?>")
+        attr('sitekey',"<?php echo $config[siteKey_turnstile]?>")
         attr('callback','turnstileCallback')
 
         for (let form of forms) {

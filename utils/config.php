@@ -1,21 +1,21 @@
 <?php
-const siteKey = 'siteKey';
-const secretKey = 'secretKey';
-const tokenParamName = "token";
+const siteKey_turnstile = 'siteKey';
+const secretKey_turnstile = 'secretKey';
+const tokenParamName_turnstile = "token";
 
-const configKey = 'heizi_turnstile';
+const configKey_turnstile = 'heizi_turnstile';
 //function includeFile($file) {
 //    include_once _include(APP_PATH."plugin/heizi_turnstile/$file");
 //}
-function getConfig() {
-    $config = setting_get(configKey);
+function tns_get_config() {
+    $config = setting_get(configKey_turnstile);
     return $config ? json_decode($config,true) : array(
-        siteKey=>"",
-        secretKey=>''
+        siteKey_turnstile=>"",
+        secretKey_turnstile=>''
     );
 }
 
-function error_message(): void {
+function tns_error_message_turnstile(): void {
     message(1,'请通过Turnstile');
 }
 
@@ -24,20 +24,20 @@ function error_message(): void {
  *
  * @return array|false|int|mixed|string
  */
-function getTokenFromReq() {
-    $data = param(tokenParamName);
+function tns_token_form_param() {
+    $data = param(tokenParamName_turnstile);
     if (empty($data)) {
-        error_message();
+        tns_error_message_turnstile();
         return false;
     }
     return $data;
 }
-function bad_vld_req($err,$code=-1): bool{
+function tns_error_bad_vld_req($err, $code=-1): bool{
     empty($err) and $err = ": ".$err;
     message($code,'验证请求失效'.$err);
     return false;
 }
-function req_not_curl($url,$data) {
+function tns_req_not_curl($url, $data) {
     $data = http_build_query($data);
     $data = stream_context_create([
         "ssl" => [
@@ -54,29 +54,29 @@ function req_not_curl($url,$data) {
     return @file_get_contents($url, false, $data);
 }
 
-function req(string $url,array $data) {
+function tns_req(string $url, array $data) {
     !defined("curlNotExist") AND define("curlNotExist",!function_exists('curl_exec'));
-    $rsp = curlNotExist ? req_not_curl($url,$data) : https_post($url,$data,460,) ;
-    if (empty($rsp)) return bad_vld_req(null);
+    $rsp = curlNotExist ? tns_req_not_curl($url,$data) : https_post($url,$data,460,) ;
+    if (empty($rsp)) return tns_error_bad_vld_req(null);
     $rsp = json_decode($rsp);
-    if (empty($rsp)) return bad_vld_req("bad rsp $rsp",-2);
+    if (empty($rsp)) return tns_error_bad_vld_req("bad rsp $rsp",-2);
     return $rsp;
 }
-function validate_post_req():void {
+function tns_validate_post_req():void {
 
     $url = 'https://challenges.cloudflare.com/turnstile/v0/siteverify';
 
-    $data = getTokenFromReq();
+    $data = tns_token_form_param();
     if (empty($data)) return;
 
     $data = [
-        'secret'=> getConfig()[secretKey],
+        'secret'=> tns_get_config()[secretKey_turnstile],
         'response' => $data,
         'remoteip' => $_SERVER['REMOTE_ADDR']
     ];
-    $data = req($url,$data);
+    $data = tns_req($url,$data);
 
-    if (empty($data)) bad_vld_req("empty rsp $data",-2);
+    if (empty($data)) tns_error_bad_vld_req("empty rsp $data",-2);
 
     if (!$data->success) {
         $directory = array(
