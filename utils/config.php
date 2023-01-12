@@ -33,7 +33,7 @@ function tns_validate_post_req($data = null): ?bool {
         tns_error_bad_vld_req("empty rsp $data", -2);
         return null;
     }
-    if (!empty($data['success'])) {
+    if (empty($data['success'])) {
         $directory = array(
             'missing-input-secret'=>'未传递秘密参数。',
             'invalid-input-secret'=>'秘密参数无效或不存在。',
@@ -44,7 +44,8 @@ function tns_validate_post_req($data = null): ?bool {
             'internal-error'=>'验证响应时发生内部错误。可以重试该请求。'
         );
         $msg = $data['error-codes'];
-        $msg = empty($msg) ? "未知错误: ".implode($data) : $directory->$msg;
+        $msg = empty($msg) ? "未知错误: ".json_encode($data)
+            : (in_array($msg,$directory) ? $directory[$msg] : json_encode($data));
         empty($msg) and $msg = "未知错误: ".$msg;
         message(1,$msg);
         return null;
@@ -75,7 +76,7 @@ function tns_error_bad_vld_req($err, $code=-1): bool{
 }
 //======return array=====//
 function tns_req(string $url, array $data) {
-    !defined("curlNotExist") AND define("curlNotExist",!function_exists('curl_exec'));
+    !defined("curlNotExist") AND define("curlNotExist",function_exists('curl_exec'));
     $rsp = curlNotExist ? tns_req_not_curl($url,$data) : https_post($url,$data,460,) ;
     if (empty($rsp)) return tns_error_bad_vld_req(null);
     $rsp = json_decode($rsp,true);
